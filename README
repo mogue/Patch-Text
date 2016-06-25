@@ -1,0 +1,112 @@
+PATCH TEXT 1.0 SPECIFICATIONS
+Date: 25 June 2016
+------------------
+Patch text is a simple way of writing binary/hex patch fixes and apply them to files.
+
+Usage:
+------
+
+    $ python patchtext-a-file.py mypatch.patchtext file-to-patch.bin
+  Applies the mypatch.patchtext file to file-to-patch.bin
+
+    $ python patchtext-to-ips.py mypatch.patchtext
+  Creates a mypatch.ips file from mypatch.patchtext
+
+
+Syntax example file:
+--------------------
+
+    ------------------------------------------------------
+    # ExampleFile.patchtext
+
+    print Some bytes will be zeroed out
+    at F12345:	00 		# zero out a byte
+		00 00 00	# zero out some bytes
+		00 00		# and two more
+
+    log buildlog.log: $$ bytes zeroed
+    ------------------------------------------------------
+
+With shorthand symbols this would be the same file:
+
+    ------------------------------------------------------
+    # ExampleFile.patchtext
+
+    >> Some bytes will be zeroed out
+    @ F12345:	00 00 00 00 00 00 # zero out the bytes
+
+    ++ buildlog.log: $$ bytes zeroed
+    ------------------------------------------------------
+
+Hex Data
+--------
+Patch text will default to interprate the text as hex values.
+
+Comments
+--------
+The comment symbol # will ignore the remainder of the line. Comments are ignored in command lines unless the delimiter has ended the command.
+
+Delimiter
+---------
+The delimiter symbol : will end a command and start parsing hex data. 
+
+The delimiter is ignored for print and execute commands.
+
+The log command will use the delimiter to end the filename and start text to write.
+
+Command list
+------------
+Commands MUST be written at the start of a line to be detected correctly.
+
+  --- @  at ---
+Starts a new chunk at the given hex offset. Data written will now attach to this chunk.
+
+@ F12345: 	00 00
+
+  --- ?  section ---
+Starts a new section with a given name. Sections are not parsed unless explicitly addressed with an include command. To return to the main section you address the unnamed section (write ?)
+
+? mysection:	00 00
+?
+
+  --- !  include ---
+Include a patch text file to parse. Sections are selected with the ? section symbol.
+
+! morestuff.patchtext?mysection
+
+  --- !b binaryfile ---
+Include a file in it's raw binary data.
+
+!b rawimage.bin
+
+  --- >> print ---
+Echo to the console some information. To print pointers to your current location use: $$, @@ or **
+     $$ : chunk size
+     @@ : address + chunk size
+     ** : offset + address + chunk size
+
+>> ****** had $$$$ bytes overwritten.
+
+  --- ++ log ----
+Appends a text line to a file. After the delimiter : the line will be processed as print command to the file.
+
+++ pointers.patchtxt:   @@ @@ @@  # pointer to current location in little-endianness
+
+  --- -- delete ----
+
+Delete a file from your harddrive.
+
+-- pointers.patchtxt
+
+  --- *  offset ---
+Modifies the address offset. Relocate any chunks or pointer outputs.
+
+* -F00000
+
+  --- $  execute ---
+Performs a terminal action.
+
+$ echo "hello world!"
+
+
+
