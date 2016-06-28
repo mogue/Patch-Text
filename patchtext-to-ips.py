@@ -1,4 +1,6 @@
 # by mogue
+# Patch Text 1.0
+# Usage: python patchtext-to-ips.py mypatch.patchtext
 
 from struct import *
 import sys, os, re, shutil
@@ -31,7 +33,7 @@ data_pointer = 0
 data_chunk = ''
 
 def format_print(str):
-	token = [ '@@', '**', '$$' ]
+	token = [ '@@', '$$', '**' ]
 	ptr   = [ "{0:X}".format( data_pointer + len(data_chunk) ),
 	          "{0:X}".format( len(data_chunk) ),
 	          "{0:X}".format( data_pointer + offset + len(data_chunk) ) ]
@@ -133,7 +135,6 @@ while len(txt_stack) > 0: # each include pushes the stack
 			fsect = re.sub(r'^\s+|\s+$', '', args[1]) # remove surrounding whitespace
 			txt_stack += [seek_section, txtf.tell(), active_filepath] 	# from
 			txt_stack += [fsect, 0, fpath] 					# to
-			print fpath + "?" + fsect
 			break
 
 		elif line[:6] == 'delete'      or line[:2] == '--':
